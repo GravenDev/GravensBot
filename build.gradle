@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
+}
+
+def main = 'fr.gravendev.gravensbot.Main'
+
+run {
+    mainClassName = main
+}
+
+jar {
+    manifest {
+        attributes("Main-Class": main)
+    }
+}
+
+shadowJar {
+    project.configurations.implementation.canBeResolved(true)
+    configurations = [project.configurations.implementation]
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.javacord:javacord:3.1.2'
+    implementation 'com.github.shyiko.dotenv:dotenv:0.1.1'
+}
