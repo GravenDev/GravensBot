@@ -1,5 +1,5 @@
-# GravensBot
+# Graven's Bot
 
-## Start developping on the bot :
+## Start developing on the bot :
 
-Rename the `.env.example` file to `.env` and fill correctly the informations inside
+Copy the `.env.example` file, rename it to `.env` and fill correctly the information inside
