@@ -39,10 +39,19 @@ public class Bot {
     }
 
     public void run() {
+        if (running) throw new RuntimeException("The bot is already running");
+
         api = new DiscordApiBuilder()
             .setToken(DotEnv.load().get("DISCORD_BOT_TOKEN"))
             .login().join();
         running = true;
+    }
+
+    public void stop() {
+        if (!running) throw new RuntimeException("The bot is not running");
+
+        api.disconnect();
+        running = false;
     }
 
 }
