@@ -25,7 +25,11 @@
 
 package fr.gravendev.gravensbot;
 
+import com.github.shyiko.dotenv.DotEnv;
+
 public class Main {
+
+    public static final String PREFIX = DotEnv.load().get("PREFIX");
 
     public static void main(String[] args) {
 

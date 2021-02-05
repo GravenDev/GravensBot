@@ -26,6 +26,7 @@
 package fr.gravendev.gravensbot;
 
 import com.github.shyiko.dotenv.DotEnv;
+import fr.gravendev.gravensbot.events.MessageEventListener;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 
@@ -45,6 +46,13 @@ public class Bot {
             .setToken(DotEnv.load().get("DISCORD_BOT_TOKEN"))
             .login().join();
         running = true;
+        setup();
+    }
+
+    private void setup() {
+
+        api.addMessageCreateListener(new MessageEventListener());
+
     }
 
     public void stop() {
