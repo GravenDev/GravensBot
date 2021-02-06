@@ -25,14 +25,18 @@
 
 package fr.gravendev.gravensbot.commands.misc;
 
+import net.feedthemadness.glib.command.dispatcher.CommandContext;
+import net.feedthemadness.glib.command.executor.CommandListener;
+import net.feedthemadness.glib.command.executor.ICommandExecutor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.event.message.MessageCreateEvent;
 
 import java.awt.*;
 
-public class PingCommand {
+public class PingCommand implements ICommandExecutor {
 
-    public void run(MessageCreateEvent event, String[] args) {
+    @CommandListener("ping")
+    public void ping(CommandContext context, MessageCreateEvent event) {
         EmbedBuilder embedBuilder = new EmbedBuilder()
             .setTitle("Pinging...")
             .setColor(Color.ORANGE);

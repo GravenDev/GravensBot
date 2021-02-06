@@ -26,19 +26,32 @@
 package fr.gravendev.gravensbot.events;
 
 import fr.gravendev.gravensbot.Main;
+import fr.gravendev.gravensbot.commands.misc.PingCommand;
+import net.feedthemadness.glib.command.Command;
+import net.feedthemadness.glib.command.dispatcher.CommandDispatcher;
+import net.feedthemadness.glib.command.dispatcher.ICommandDispatcher;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
 
 import java.util.Arrays;
 
-public class MessageEventListener implements MessageCreateListener {
+import static fr.gravendev.gravensbot.Main.PREFIX;
 
+public class MessageEventListener implements MessageCreateListener, ICommandDispatcher {
+
+    private CommandDispatcher dispatcher;
 
     public MessageEventListener() {
+        this.dispatcher = new CommandDispatcher();
         setup();
     }
 
     private void setup() {
+        addCommand(new Command()
+            .setPrefix(PREFIX)
+            .setLabelAndAliases("ping", "pong", "latency")
+            .addExecutor(new PingCommand(), "ping")
+        );
     }
 
     @Override
@@ -53,8 +66,19 @@ public class MessageEventListener implements MessageCreateListener {
         }
 
         // Check if command
-        if (!event.getMessageContent().trim().startsWith(Main.PREFIX)) return;
+        if (!event.getMessageContent().trim().startsWith(PREFIX)) return;
 
+        // Dispatch command
+        dispatch(this, event.getMessageContent(), event);
     }
 
+    @Override
+    public ICommandDispatcher addCommand(Command command) {
+        return this.dispatcher.addCommand(command);
+    }
+
+    @Override
+    public void dispatch(ICommandDispatcher dispatcher, String parsableCommand, Object... dispatchContext) {
+        this.dispatcher.dispatch(dispatcher, parsableCommand, dispatchContext);
+    }
 }
