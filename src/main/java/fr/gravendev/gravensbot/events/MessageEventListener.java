@@ -26,8 +26,6 @@
 package fr.gravendev.gravensbot.events;
 
 import fr.gravendev.gravensbot.Main;
-import fr.gravendev.gravensbot.commands.misc.PingCommand;
-import fr.gravendev.gravensbot.events.commands.CommandRegistry;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
 
@@ -35,15 +33,12 @@ import java.util.Arrays;
 
 public class MessageEventListener implements MessageCreateListener {
 
-    private final CommandRegistry registry;
 
     public MessageEventListener() {
-        registry = new CommandRegistry();
         setup();
     }
 
     private void setup() {
-        registry.addCommand(new PingCommand());
     }
 
     @Override
@@ -60,18 +55,6 @@ public class MessageEventListener implements MessageCreateListener {
         // Check if command
         if (!event.getMessageContent().trim().startsWith(Main.PREFIX)) return;
 
-        // Parse
-        String[] args = event.getMessageContent().trim().substring(Main.PREFIX.length()).split(" ");
-        String cmdName = args[0];
-        args = Arrays.copyOfRange(args, 1, args.length);
-        String[] finalArgs = args;
-        registry.getCommandByAlias(cmdName)
-            .thenAccept(
-                presumedCommand
-                    -> presumedCommand.ifPresent(command
-                    -> command.run(event, finalArgs)
-                )
-            );
     }
 
 }

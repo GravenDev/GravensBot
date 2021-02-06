@@ -25,23 +25,13 @@
 
 package fr.gravendev.gravensbot.commands.misc;
 
-import fr.gravendev.gravensbot.events.commands.Command;
-import fr.gravendev.gravensbot.events.commands.CommandAliases;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.event.message.MessageCreateEvent;
 
 import java.awt.*;
-import java.time.Instant;
 
-import static fr.gravendev.gravensbot.events.commands.CommandAliases.aliases;
+public class PingCommand {
 
-public class PingCommand implements Command {
-    @Override
-    public CommandAliases getAliases() {
-        return aliases("ping", "pong", "latency");
-    }
-
-    @Override
     public void run(MessageCreateEvent event, String[] args) {
         EmbedBuilder embedBuilder = new EmbedBuilder()
             .setTitle("Pinging...")
