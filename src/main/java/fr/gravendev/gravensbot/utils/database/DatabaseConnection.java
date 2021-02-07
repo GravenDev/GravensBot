@@ -23,49 +23,47 @@
  * SOFTWARE.
  */
 
-package fr.gravendev.gravensbot;
+package fr.gravendev.gravensbot.utils.database;
 
 import com.github.shyiko.dotenv.DotEnv;
-import fr.gravendev.gravensbot.events.MessageEventListener;
-import fr.gravendev.gravensbot.utils.database.DatabaseConnection;
-import org.javacord.api.DiscordApi;
-import org.javacord.api.DiscordApiBuilder;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoCredential;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
+import org.bson.types.ObjectId;
 
+import javax.print.Doc;
 import java.sql.SQLException;
 
-public class Bot {
+public class DatabaseConnection {
 
-    private DiscordApi api;
-    private DatabaseConnection connection;
-    private volatile boolean running;
+    private MongoClient connection;
 
-    public Bot() {
-        this.running = false;
-        this.connection = new DatabaseConnection();
+    public DatabaseConnection() {
+        String url = DotEnv.load().get("MONGO_URL");
+        connection = MongoClients.create(
+            MongoClientSettings.builder()
+                .applyConnectionString(
+                    new ConnectionString(
+                        "mongodb://admin:"
+                            + DotEnv.load().get("MONGO_INITDB_ROOT_PASSWORD")
+                            + "@"
+                            + url
+                    )
+                )
+                .retryWrites(true)
+                .build()
+        );
+        connection.startSession();
     }
 
-    public void run() {
-        if (running) throw new RuntimeException("The bot is already running");
-
-        api = new DiscordApiBuilder()
-            .setToken(DotEnv.load().get("DISCORD_BOT_TOKEN"))
-            .login().join();
-        running = true;
-        setup();
-    }
-
-    private void setup() {
-
-        api.addMessageCreateListener(new MessageEventListener());
-
-    }
-
-    public void stop() throws SQLException {
-        if (!running) throw new RuntimeException("The bot is not running");
-
-        api.disconnect();
+    public void close() throws SQLException {
         connection.close();
-        running = false;
     }
+
 
 }
