@@ -91,7 +91,7 @@ public class BasicSanction {
 
         return new BasicSanction(
             sanction.getSanctionId(),
-            sanction.getSanctionType(),
+            SanctionType.valueOf(sanction.getSanctionType()),
             sanction.getReason(),
             applier.get(),
             target.get(),

@@ -76,7 +76,7 @@ public class EndingSanction extends BasicSanction {
 
         return new EndingSanction(
             sanction.getSanctionId(),
-            sanction.getSanctionType(),
+            SanctionType.valueOf(sanction.getSanctionType()),
             sanction.getReason(),
             applier.get(),
             target.get(),

@@ -25,32 +25,51 @@
 
 package fr.gravendev.gravensbot.events;
 
-import fr.gravendev.gravensbot.Main;
 import fr.gravendev.gravensbot.commands.misc.PingCommand;
+import fr.gravendev.gravensbot.commands.moderation.WarnCommand;
+import fr.gravendev.gravensbot.events.commands.types.UserMentionSubArgumentType;
+import fr.gravendev.gravensbot.utils.database.DatabaseConnection;
+import fr.gravendev.gravensbot.utils.database.repositories.RepositoryManager;
 import net.feedthemadness.glib.command.Command;
 import net.feedthemadness.glib.command.dispatcher.CommandDispatcher;
 import net.feedthemadness.glib.command.dispatcher.ICommandDispatcher;
+import net.feedthemadness.glib.command.sub.SubArgument;
+import net.feedthemadness.glib.command.sub.SubArgumentText;
+import org.javacord.api.DiscordApi;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
-
-import java.util.Arrays;
 
 import static fr.gravendev.gravensbot.Main.PREFIX;
 
 public class MessageEventListener implements MessageCreateListener, ICommandDispatcher {
 
-    private CommandDispatcher dispatcher;
+    private final DatabaseConnection connection;
+    private final RepositoryManager repos;
+    private final CommandDispatcher dispatcher;
 
-    public MessageEventListener() {
+    public MessageEventListener(DiscordApi api, DatabaseConnection connection) {
         this.dispatcher = new CommandDispatcher();
-        setup();
+        this.connection = connection;
+        this.repos = new RepositoryManager(connection);
+        setup(api);
     }
 
-    private void setup() {
+    private void setup(DiscordApi api) {
         addCommand(new Command()
             .setPrefix(PREFIX)
             .setLabelAndAliases("ping", "pong", "latency")
             .addExecutor(new PingCommand(), "ping")
+        );
+        addCommand(new Command()
+            .setPrefix(PREFIX)
+            .setLabelAndAliases("warn")
+            .addSubElement(
+                new SubArgument()
+                    .setType(new UserMentionSubArgumentType(api))
+                    .addSubElement(new SubArgumentText()
+                        .addExecutor(new WarnCommand(repos), "warn")
+                    )
+            )
         );
     }
 

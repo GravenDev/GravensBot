@@ -25,6 +25,8 @@
 
 package fr.gravendev.gravensbot.utils.sanctions;
 
+import org.bson.Document;
+
 import java.time.Instant;
 
 public class MongoBasicSanction {
@@ -32,13 +34,13 @@ public class MongoBasicSanction {
 
     private final int sanctionId;
     private final Instant createdAt, updatedAt;
-    private final SanctionType sanctionType;
+    private final String sanctionType;
     private final String reason, sanctionMessage;
     private final long applier, target;
 
     protected MongoBasicSanction(
         int sanctionId,
-        SanctionType type,
+        String type,
         String reason,
         long applier,
         long target,
@@ -59,7 +61,7 @@ public class MongoBasicSanction {
     public static MongoBasicSanction fromBasicSanction(BasicSanction sanction) {
         return new MongoBasicSanction(
             sanction.getId(),
-            sanction.getSanctionType(),
+            sanction.getSanctionType().name(),
             sanction.getReason(),
             sanction.getApplier().getId(),
             sanction.getTarget().getId(),
@@ -69,11 +71,25 @@ public class MongoBasicSanction {
         );
     }
 
+    public static MongoBasicSanction fromBson(Document a) {
+        if (a == null) return null;
+        return new MongoBasicSanction(
+            a.get("sanctionId", Integer.class),
+            a.get("type", String.class),
+            a.get("reason", String.class),
+            a.get("applier", Long.class),
+            a.get("target", Long.class),
+            a.get("message", String.class),
+            a.get("createdAt", Instant.class),
+            a.get("updatedAt", Instant.class)
+        );
+    }
+
     public final int getSanctionId() {
         return sanctionId;
     }
 
-    public final SanctionType getSanctionType() {
+    public final String getSanctionType() {
         return sanctionType;
     }
 
@@ -99,5 +115,17 @@ public class MongoBasicSanction {
 
     public final Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public Document toBson() {
+        return new Document()
+            .append("sanctionId", getSanctionId())
+            .append("type", getSanctionType())
+            .append("reason", getReason())
+            .append("applier", getApplier())
+            .append("target", getTarget())
+            .append("message", getSanctionMessage())
+            .append("createdAt", getCreatedAt())
+            .append("updatedAt", getUpdatedAt());
     }
 }

@@ -25,43 +25,17 @@
 
 package fr.gravendev.gravensbot.utils.database.repositories;
 
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import fr.gravendev.gravensbot.utils.database.DatabaseConnection;
-import fr.gravendev.gravensbot.utils.sanctions.MongoBasicSanction;
-import org.bson.Document;
-import org.javacord.api.entity.user.User;
 
-import java.util.List;
-import java.util.Optional;
+public class RepositoryManager {
 
-public class SanctionRepository {
+    private final BasicSanctionRepository basicSanctionRepository;
 
-    private final DatabaseConnection connection;
-    private final MongoDatabase database;
-
-    public SanctionRepository(DatabaseConnection connection) {
-        this.connection = connection;
-        this.database = connection.getDatabase();
+    public RepositoryManager(DatabaseConnection dbConnection) {
+        this.basicSanctionRepository = new BasicSanctionRepository(dbConnection);
     }
 
-    public MongoCollection<MongoBasicSanction> findAll() {
-        return database.getCollection("sanctions", MongoBasicSanction.class);
-    }
-
-    public Optional<MongoBasicSanction> findById(int sanctionId) {
-        MongoCollection<MongoBasicSanction> sanctions =
-            database.getCollection("sanctions", MongoBasicSanction.class);
-        Document filter = new Document()
-            .append("sanctionId", sanctionId);
-        MongoBasicSanction sanction = sanctions
-            .find(filter)
-            .limit(1)
-            .first();
-        return Optional.ofNullable(sanction);
-    }
-
-    public List<MongoBasicSanction> findByUserId(long userId) {
-
+    public BasicSanctionRepository getBasicSanctionRepository() {
+        return basicSanctionRepository;
     }
 }

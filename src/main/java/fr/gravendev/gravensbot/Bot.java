@@ -56,7 +56,7 @@ public class Bot {
 
     private void setup() {
 
-        api.addMessageCreateListener(new MessageEventListener());
+        api.addMessageCreateListener(new MessageEventListener(api, connection));
 
     }
 

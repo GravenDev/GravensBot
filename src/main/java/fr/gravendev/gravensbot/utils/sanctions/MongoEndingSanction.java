@@ -33,11 +33,11 @@ public class MongoEndingSanction extends MongoBasicSanction {
 
     protected MongoEndingSanction(
         int sanctionId,
-        SanctionType type,
+        String type,
         String reason,
         long applier,
         long target,
-        long sanctionMessage,
+        String sanctionMessage,
         Instant createdAt,
         Instant updatedAt,
         Instant endingAt
@@ -49,11 +49,11 @@ public class MongoEndingSanction extends MongoBasicSanction {
     public static MongoBasicSanction fromEndingSanction(EndingSanction sanction) {
         return new MongoEndingSanction(
             sanction.getId(),
-            sanction.getSanctionType(),
+            sanction.getSanctionType().name(),
             sanction.getReason(),
             sanction.getApplier().getId(),
             sanction.getTarget().getId(),
-            sanction.getSanctionMessage().getId(),
+            sanction.getSanctionMessage().getLink().toString(),
             sanction.getCreatedAt(),
             sanction.getUpdatedAt(),
             sanction.getEndedAt()
