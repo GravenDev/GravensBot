@@ -25,19 +25,66 @@
 
 package fr.gravendev.gravensbot.utils.sanctions;
 
+import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.user.User;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class EndingSanction extends BasicSanction {
 
     private Instant endedAt;
 
-    public EndingSanction(int id, SanctionType type, String reason, User applier, User target, Message sanctionMsg, Duration duration) {
+    public EndingSanction(
+        int id,
+        SanctionType type,
+        String reason,
+        User applier,
+        User target,
+        Message sanctionMsg,
+        Duration duration
+    ) {
         super(id, type, reason, applier, target, sanctionMsg);
         this.endedAt = Instant.now().plus(duration);
+    }
+
+
+    protected EndingSanction(
+        int id,
+        SanctionType type,
+        String reason,
+        User applier,
+        User target,
+        Message sanctionMsg,
+        Instant createdAt,
+        Instant updatedAt,
+        Instant endedAt
+    ) {
+        super(id, type, reason, applier, target, sanctionMsg, createdAt, updatedAt);
+        this.endedAt = endedAt;
+    }
+
+    public static EndingSanction fromMongoEndingSanction(DiscordApi api, MongoEndingSanction sanction) {
+        AtomicReference<User> applier = new AtomicReference<>();
+        api.getUserById(sanction.getApplier()).thenAccept(applier::set);
+        AtomicReference<User> target = new AtomicReference<>();
+        api.getUserById(sanction.getTarget()).thenAccept(applier::set);
+        AtomicReference<Message> message = new AtomicReference<>(null);
+        api.getMessageByLink(sanction.getSanctionMessage()).ifPresent(potMsg -> potMsg.thenAccept(message::set));
+
+        return new EndingSanction(
+            sanction.getSanctionId(),
+            sanction.getSanctionType(),
+            sanction.getReason(),
+            applier.get(),
+            target.get(),
+            message.get(),
+            sanction.getCreatedAt(),
+            sanction.getUpdatedAt(),
+            sanction.getEndingAt()
+        );
     }
 
     public final Instant getEndedAt() {

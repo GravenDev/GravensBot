@@ -25,10 +25,12 @@
 
 package fr.gravendev.gravensbot.utils.sanctions;
 
+import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.user.User;
 
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class BasicSanction {
 
@@ -48,13 +50,55 @@ public class BasicSanction {
         User target,
         Message sanctionMessage
     ) {
+        this(
+            id,
+            type,
+            reason,
+            applier,
+            target,
+            sanctionMessage,
+            Instant.now(), Instant.now()
+        );
+    }
+
+    protected BasicSanction(
+        int id,
+        SanctionType type,
+        String reason,
+        User applier,
+        User target,
+        Message sanctionMessage,
+        Instant createdAt,
+        Instant updatedAt
+    ) {
         this.id = id;
         this.sanctionType = type;
         this.reason = reason;
         this.applier = applier;
         this.sanctionMessage = sanctionMessage;
         this.target = target;
-        this.createdAt = this.updatedAt = Instant.now();
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    public static BasicSanction fromMongoBasicSanction(DiscordApi api, MongoBasicSanction sanction) {
+        AtomicReference<User> applier = new AtomicReference<>();
+        api.getUserById(sanction.getApplier()).thenAccept(applier::set);
+        AtomicReference<User> target = new AtomicReference<>();
+        api.getUserById(sanction.getTarget()).thenAccept(applier::set);
+        AtomicReference<Message> message = new AtomicReference<>(null);
+        api.getMessageByLink(sanction.getSanctionMessage()).ifPresent(potMsg -> potMsg.thenAccept(message::set));
+
+        return new BasicSanction(
+            sanction.getSanctionId(),
+            sanction.getSanctionType(),
+            sanction.getReason(),
+            applier.get(),
+            target.get(),
+            message.get(),
+            sanction.getCreatedAt(),
+            sanction.getUpdatedAt()
+        );
     }
 
     public final int getId() {

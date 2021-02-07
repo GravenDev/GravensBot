@@ -23,50 +23,45 @@
  * SOFTWARE.
  */
 
-package fr.gravendev.gravensbot.utils.database;
+package fr.gravendev.gravensbot.utils.database.repositories;
 
-import com.github.shyiko.dotenv.DotEnv;
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
-import com.mongodb.MongoCredential;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import fr.gravendev.gravensbot.utils.database.DatabaseConnection;
+import fr.gravendev.gravensbot.utils.sanctions.MongoBasicSanction;
 import org.bson.Document;
-import org.bson.types.ObjectId;
+import org.javacord.api.entity.user.User;
 
-import javax.print.Doc;
-import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
 
-public class DatabaseConnection {
+public class SanctionRepository {
 
-    private MongoClient connection;
+    private final DatabaseConnection connection;
+    private final MongoDatabase database;
 
-    public DatabaseConnection() {
-        String url = DotEnv.load().get("MONGO_URL");
-        connection = MongoClients.create(
-            MongoClientSettings.builder()
-                .applyConnectionString(
-                    new ConnectionString(
-                        "mongodb://admin:"
-                            + DotEnv.load().get("MONGO_INITDB_ROOT_PASSWORD")
-                            + "@"
-                            + url
-                    )
-                )
-                .retryWrites(true)
-                .build()
-        );
-        connection.startSession();
+    public SanctionRepository(DatabaseConnection connection) {
+        this.connection = connection;
+        this.database = connection.getDatabase();
     }
 
-    public void close() throws SQLException {
-        connection.close();
+    public MongoCollection<MongoBasicSanction> findAll() {
+        return database.getCollection("sanctions", MongoBasicSanction.class);
     }
 
+    public Optional<MongoBasicSanction> findById(int sanctionId) {
+        MongoCollection<MongoBasicSanction> sanctions =
+            database.getCollection("sanctions", MongoBasicSanction.class);
+        Document filter = new Document()
+            .append("sanctionId", sanctionId);
+        MongoBasicSanction sanction = sanctions
+            .find(filter)
+            .limit(1)
+            .first();
+        return Optional.ofNullable(sanction);
+    }
 
-    public MongoDatabase getDatabase() {
-        return connection.getDatabase("GravensBot");
+    public List<MongoBasicSanction> findByUserId(long userId) {
+
     }
 }
