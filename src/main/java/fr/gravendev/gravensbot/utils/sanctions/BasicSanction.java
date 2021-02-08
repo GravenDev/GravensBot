@@ -27,9 +27,12 @@ package fr.gravendev.gravensbot.utils.sanctions;
 
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class BasicSanction {
@@ -37,6 +40,7 @@ public class BasicSanction {
     private final int id;
     private final Instant createdAt;
     private final Message sanctionMessage;
+    private final Server server;
     private SanctionType sanctionType;
     private String reason;
     private User applier, target;
@@ -46,6 +50,7 @@ public class BasicSanction {
         int id,
         SanctionType type,
         String reason,
+        Server server,
         User applier,
         User target,
         Message sanctionMessage
@@ -54,6 +59,7 @@ public class BasicSanction {
             id,
             type,
             reason,
+            server,
             applier,
             target,
             sanctionMessage,
@@ -65,6 +71,7 @@ public class BasicSanction {
         int id,
         SanctionType type,
         String reason,
+        Server server,
         User applier,
         User target,
         Message sanctionMessage,
@@ -73,6 +80,7 @@ public class BasicSanction {
     ) {
         this.id = id;
         this.sanctionType = type;
+        this.server = server;
         this.reason = reason;
         this.applier = applier;
         this.sanctionMessage = sanctionMessage;
@@ -81,24 +89,31 @@ public class BasicSanction {
         this.updatedAt = updatedAt;
     }
 
-    public static BasicSanction fromMongoBasicSanction(DiscordApi api, MongoBasicSanction sanction) {
-        AtomicReference<User> applier = new AtomicReference<>();
-        api.getUserById(sanction.getApplier()).thenAccept(applier::set);
-        AtomicReference<User> target = new AtomicReference<>();
-        api.getUserById(sanction.getTarget()).thenAccept(applier::set);
-        AtomicReference<Message> message = new AtomicReference<>(null);
-        api.getMessageByLink(sanction.getSanctionMessage()).ifPresent(potMsg -> potMsg.thenAccept(message::set));
+    public static CompletableFuture<BasicSanction> fromMongoBasicSanction(DiscordApi api, MongoBasicSanction sanction) {
+        CompletableFuture<BasicSanction> future = new CompletableFuture<>();
+        api
+            .getUserById(sanction.getApplier())
+            .thenAcceptBoth(api.getUserById(sanction.getTarget()), (applier, target) -> {
+                AtomicReference<Server> server = new AtomicReference<>();
+                api
+                    .getServerById(sanction.getServer())
+                    .ifPresent(server::set);
 
-        return new BasicSanction(
-            sanction.getSanctionId(),
-            SanctionType.valueOf(sanction.getSanctionType()),
-            sanction.getReason(),
-            applier.get(),
-            target.get(),
-            message.get(),
-            sanction.getCreatedAt(),
-            sanction.getUpdatedAt()
-        );
+                api
+                    .getMessageByLink(sanction.getSanctionMessage())
+                    .ifPresent(potMsg -> potMsg.thenAccept(message -> future.complete(new BasicSanction(
+                        sanction.getSanctionId(),
+                        SanctionType.valueOf(sanction.getSanctionType()),
+                        sanction.getReason(),
+                        server.get(),
+                        applier,
+                        target,
+                        message,
+                        sanction.getCreatedAt(),
+                        sanction.getUpdatedAt()
+                    ))));
+            });
+        return future;
     }
 
     public final int getId() {
@@ -121,6 +136,10 @@ public class BasicSanction {
     public final void setReason(String reason) {
         this.reason = reason;
         update();
+    }
+
+    public Server getServer() {
+        return server;
     }
 
     public final User getApplier() {

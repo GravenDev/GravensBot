@@ -59,6 +59,7 @@ public class WarnCommand implements ICommandExecutor {
             repository.getLastSanctionId() + 1,
             SanctionType.WARN,
             reason,
+            event.getServer().get(),
             event.getMessageAuthor().asUser().get(),
             mention,
             event.getMessage()

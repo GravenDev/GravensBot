@@ -27,10 +27,12 @@ package fr.gravendev.gravensbot.utils.sanctions;
 
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class EndingSanction extends BasicSanction {
@@ -41,12 +43,13 @@ public class EndingSanction extends BasicSanction {
         int id,
         SanctionType type,
         String reason,
+        Server server,
         User applier,
         User target,
         Message sanctionMsg,
         Duration duration
     ) {
-        super(id, type, reason, applier, target, sanctionMsg);
+        super(id, type, reason, server, applier, target, sanctionMsg);
         this.endedAt = Instant.now().plus(duration);
     }
 
@@ -55,6 +58,7 @@ public class EndingSanction extends BasicSanction {
         int id,
         SanctionType type,
         String reason,
+        Server server,
         User applier,
         User target,
         Message sanctionMsg,
@@ -62,29 +66,39 @@ public class EndingSanction extends BasicSanction {
         Instant updatedAt,
         Instant endedAt
     ) {
-        super(id, type, reason, applier, target, sanctionMsg, createdAt, updatedAt);
+        super(id, type, reason, server, applier, target, sanctionMsg, createdAt, updatedAt);
         this.endedAt = endedAt;
     }
 
-    public static EndingSanction fromMongoEndingSanction(DiscordApi api, MongoEndingSanction sanction) {
-        AtomicReference<User> applier = new AtomicReference<>();
-        api.getUserById(sanction.getApplier()).thenAccept(applier::set);
-        AtomicReference<User> target = new AtomicReference<>();
-        api.getUserById(sanction.getTarget()).thenAccept(applier::set);
-        AtomicReference<Message> message = new AtomicReference<>(null);
-        api.getMessageByLink(sanction.getSanctionMessage()).ifPresent(potMsg -> potMsg.thenAccept(message::set));
+    public static CompletableFuture<EndingSanction> fromMongoEndingSanction(
+        DiscordApi api,
+        MongoEndingSanction sanction
+    ) {
+        CompletableFuture<EndingSanction> future = new CompletableFuture<>();
+        api
+            .getUserById(sanction.getApplier())
+            .thenAcceptBoth(api.getUserById(sanction.getTarget()), (applier, target) -> {
+                AtomicReference<Server> server = new AtomicReference<>();
+                api
+                    .getServerById(sanction.getServer())
+                    .ifPresent(server::set);
 
-        return new EndingSanction(
-            sanction.getSanctionId(),
-            SanctionType.valueOf(sanction.getSanctionType()),
-            sanction.getReason(),
-            applier.get(),
-            target.get(),
-            message.get(),
-            sanction.getCreatedAt(),
-            sanction.getUpdatedAt(),
-            sanction.getEndingAt()
-        );
+                api
+                    .getMessageByLink(sanction.getSanctionMessage())
+                    .ifPresent(potMsg -> potMsg.thenAccept(message -> future.complete(new EndingSanction(
+                        sanction.getSanctionId(),
+                        SanctionType.valueOf(sanction.getSanctionType()),
+                        sanction.getReason(),
+                        server.get(),
+                        applier,
+                        target,
+                        message,
+                        sanction.getCreatedAt(),
+                        sanction.getUpdatedAt(),
+                        sanction.getEndingAt()
+                    ))));
+            });
+        return future;
     }
 
     public final Instant getEndedAt() {

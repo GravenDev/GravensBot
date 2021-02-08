@@ -36,12 +36,13 @@ public class MongoBasicSanction {
     private final Instant createdAt, updatedAt;
     private final String sanctionType;
     private final String reason, sanctionMessage;
-    private final long applier, target;
+    private final long server, applier, target;
 
     protected MongoBasicSanction(
         int sanctionId,
         String type,
         String reason,
+        long server,
         long applier,
         long target,
         String sanctionMessage,
@@ -50,6 +51,7 @@ public class MongoBasicSanction {
     ) {
         this.sanctionId = sanctionId;
         this.sanctionType = type;
+        this.server = server;
         this.reason = reason;
         this.applier = applier;
         this.sanctionMessage = sanctionMessage;
@@ -63,6 +65,7 @@ public class MongoBasicSanction {
             sanction.getId(),
             sanction.getSanctionType().name(),
             sanction.getReason(),
+            sanction.getServer().getId(),
             sanction.getApplier().getId(),
             sanction.getTarget().getId(),
             sanction.getSanctionMessage().getLink().toString(),
@@ -77,6 +80,7 @@ public class MongoBasicSanction {
             a.get("sanctionId", Integer.class),
             a.get("type", String.class),
             a.get("reason", String.class),
+            a.get("server", Long.class),
             a.get("applier", Long.class),
             a.get("target", Long.class),
             a.get("message", String.class),
@@ -95,6 +99,10 @@ public class MongoBasicSanction {
 
     public final String getReason() {
         return reason;
+    }
+
+    public long getServer() {
+        return server;
     }
 
     public final long getApplier() {
@@ -122,6 +130,7 @@ public class MongoBasicSanction {
             .append("sanctionId", getSanctionId())
             .append("type", getSanctionType())
             .append("reason", getReason())
+            .append("server", getServer())
             .append("applier", getApplier())
             .append("target", getTarget())
             .append("message", getSanctionMessage())
